@@ -7,7 +7,7 @@ public class VulnerableCode {
         this.input = input;
     }
 
-    // Vulnerability 1: SQL Injection --
+    // Vulnerability 1: SQL Injection
     public void vulnerableSQLQuery() throws SQLException {
         String query = "SELECT * FROM users WHERE username = '" + input + "';";
         Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/db", "user", "password");

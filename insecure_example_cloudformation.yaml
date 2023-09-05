@@ -1,0 +1,88 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+
+  # Vulnerability 1: Publicly Accessible S3 Bucket
+  MyS3Bucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      AccessControl: PublicRead
+
+  # Vulnerability 2: Security Group Allowing All Inbound Traffic
+  OpenSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      GroupDescription: All traffic
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '0'
+          ToPort: '65535'
+          CidrIp: 0.0.0.0/0
+
+  # Vulnerability 3: RDS with a hardcoded password
+  MyDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      Engine: mysql
+      MasterUsername: admin
+      MasterUserPassword: admin1234
+
+  # Vulnerability 4: RDS Instance publicly accessible
+  PublicDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      PubliclyAccessible: true
+
+  # Vulnerability 5: IAM User with Full Access Policy
+  FullAccessUser:
+    Type: AWS::IAM::User
+    Properties:
+      Policies:
+        - PolicyName: rootAccess
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action: '*'
+                Resource: '*'
+
+  # Vulnerability 6: EC2 Instance with Root Access Key Stored
+  EC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          echo "AWS_ACCESS_KEY=YOUR-ACCESS-KEY" >> /etc/environment
+          echo "AWS_SECRET_KEY=YOUR-SECRET-KEY" >> /etc/environment
+
+  # Vulnerability 7: Insecure Protocol Enabled (HTTP instead of HTTPS)
+  InsecureLoadBalancer:
+    Type: AWS::ElasticLoadBalancing::LoadBalancer
+    Properties:
+      Listeners:
+        - LoadBalancerPort: '80'
+          InstancePort: '80'
+          Protocol: HTTP
+
+  # Vulnerability 8: EBS Volume with No Encryption
+  UnencryptedEBS:
+    Type: "AWS::EC2::Volume"
+    Properties: 
+      Size: '20'
+      Encrypted: false
+
+  # Vulnerability 9: Lambda Function with Excessive Timeout
+  SlowLambda:
+    Type: AWS::Lambda::Function
+    Properties: 
+      Handler: index.handler
+      Role: arn:aws:iam::123456789012:role/execution_role
+      FunctionName: slow-function
+      Timeout: 900 # 15 minutes
+
+  # Vulnerability 10: CloudWatch Alarm with Insufficient Actions
+  IneffectiveAlarm:
+    Type: "AWS::CloudWatch::Alarm"
+    Properties: 
+      AlarmActions: []
+      AlarmDescription: "An alarm with no actions"
+      ComparisonOperator: "GreaterThanThreshold"
